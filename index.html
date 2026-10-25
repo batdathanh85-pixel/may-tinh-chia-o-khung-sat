@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#173b32">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<title>Máy tính chia ô khung sắt</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#17221e;--muted:#62716a;--line:#dce5df;--green:#176b4d;--green2:#e8f5ee;--amber:#fff4dc;--red:#9c342b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:#173b32;color:#fff;padding:22px 16px 20px}
+header .wrap,main{max-width:850px;margin:auto}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.15;margin:0 0 8px}
+header p{margin:0;color:#d9e9e1}
+main{padding:16px;display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 14px #102a1b08}
+h2{font-size:19px;margin:0 0 12px}
+h3{font-size:16px;margin:16px 0 8px}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.mode label:has(input:checked){border-color:var(--green);background:var(--green2)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+input[type=number],select{width:100%;min-width:0;border:1px solid #cbd7d0;border-radius:10px;padding:12px;font:inherit;background:white;color:var(--ink)}
+input:focus,select:focus{outline:2px solid #78b69a;border-color:var(--green)}
+.checks{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
+.checks label{display:flex;align-items:center;gap:8px}
+button{border:0;border-radius:11px;padding:12px 15px;font:700 15px inherit;cursor:pointer}
+.primary{background:var(--green);color:#fff;width:100%;margin-top:14px}
+.secondary{background:var(--green2);color:#15553f}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1}
+.hint{font-size:13px;color:var(--muted);margin:9px 0 0}
+.result{display:none}
+.result.show{display:block}
+.notice{padding:11px 12px;border-radius:10px;background:var(--green2);margin:10px 0}
+.notice.warn{background:var(--amber)}
+.notice.bad{background:#fdecea;color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.stat{background:#f6f8f6;border-radius:12px;padding:12px}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat strong{font-size:23px;display:block;margin-top:2px;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:12px}
+.tablewrap{overflow-x:auto}
+svg{width:100%;height:auto;display:block;background:#fbfcfb;border:1px solid var(--line);border-radius:10px}
+details summary{cursor:pointer;font-weight:700}
+footer{font-size:12px;color:var(--muted);padding:0 16px 24px;text-align:center}
+@media(min-width:650px){.fields{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:420px){main{padding:10px}.card{padding:13px}.fields{gap:9px}.mode label{font-size:14px;padding:10px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Máy tính chia ô khung sắt</h1>
+<p>Tính ô lọt lòng, số thanh chia và vị trí lấy dấu — dùng offline trên điện thoại.</p>
+</div></header>
+<main>
+<section class="card">
+<h2>1. Nhập kích thước</h2>
+<div class="mode">
+<label><input type="radio" name="mode" value="alt" checked> Ô to – ô nhỏ xen kẽ</label>
+<label><input type="radio" name="mode" value="equal"> Chia tất cả ô đều nhau</label>
+</div>
+<div class="fields" style="margin-top:14px">
+<div class="field"><label for="width">Chiều lọt lòng khung (mm)</label><input id="width" type="number" min="1" step="0.1" value="1220"></div>
+<div class="field"><label for="bar">Bề rộng thanh chia (mm)</label><input id="bar" type="number" min="0.1" step="0.1" value="16"></div>
+<div class="field"><label for="equalN">Số ô đều nhau (chế độ chia đều)</label><input id="equalN" type="number" min="1" step="1" value="8"></div>
+</div>
+<div id="altFields">
+<h3>Thiết lập ô xen kẽ</h3>
+<div class="fields">
+<div class="field"><label for="small">Ô nhỏ lọt lòng (mm)</label><input id="small" type="number" min="0" step="0.1" value="30"></div>
+<div class="field"><label for="minBig">Ô to nhỏ nhất (mm)</label><input id="minBig" type="number" min="0.1" step="0.1" value="100"></div>
+<div class="field"><label for="maxBig">Ô to lớn nhất (mm)</label><input id="maxBig" type="number" min="0.1" step="0.1" value="120"></div>
+</div>
+<div class="checks">
+<label><input type="checkbox" id="evenBig" checked> Ưu tiên số ô to chẵn</label>
+<label><input type="checkbox" id="largeEnds" checked> Hai đầu là ô to</label>
+</div>
+<p class="hint">Khi bật “hai đầu là ô to”, mẫu sẽ là ô to – ô nhỏ – ô to. Nếu bỏ chọn, mẫu bắt đầu và kết thúc bằng ô nhỏ.</p>
+</div>
+<button class="primary" id="calcBtn">Tính phương án</button>
+<p class="hint">Kích thước khung là khoảng trống bên trong hai mép khung. Bề rộng thanh chia được trừ riêng; không nhập kích thước phủ bì khung.</p>
+</section>
+
+<section class="card result" id="result">
+<h2>2. Kết quả</h2>
+<div id="message" class="notice"></div>
+<div class="stats" id="stats"></div>
+<h3>Sơ đồ bố trí (minh họa, không theo tỷ lệ tuyệt đối)</h3>
+<div id="drawing"></div>
+<h3>Kiểm tra tổng kích thước</h3>
+<div class="tablewrap"><table><tbody id="checkTable"></tbody></table></div>
+<h3>Vị trí lấy dấu thanh chia</h3>
+<p class="hint">Các vị trí tính từ mép trong bên trái của khung đến mép trái từng thanh chia. Đơn vị mm.</p>
+<div class="tablewrap"><table><thead><tr><th>Thanh</th><th>Mép trái thanh (mm)</th><th>Tâm thanh (mm)</th></tr></thead><tbody id="marks"></tbody></table></div>
+<div class="actions">
+<button class="secondary" id="copyBtn">Sao chép kết quả</button>
+<button class="secondary" id="txtBtn">Tải báo cáo .txt</button>
+</div>
+</section>
+<section class="card">
+<details>
+<summary>Cách tính và lưu ý gia công</summary>
+<p><b>Chia ô đều:</b> số thanh chia bên trong = số ô − 1. Lọt lòng mỗi ô = (lọt lòng khung − tổng bề rộng thanh chia) ÷ số ô.</p>
+<p><b>Ô xen kẽ, hai đầu ô to:</b> nếu có N ô to thì có N−1 ô nhỏ và 2N−2 thanh chia. Lọt lòng ô to = (lọt lòng khung − (N−1) × ô nhỏ − (2N−2) × bề rộng thanh) ÷ N.</p>
+<p><b>Lưu ý:</b> kết quả chỉ tính các thanh chia bên trong khoảng lọt lòng. Nếu có khung bao, nẹp, mối hàn hoặc thanh biên nằm bên trong khoảng đo thì cần tính theo cấu tạo thực tế. Hãy kiểm tra kích thước và độ dày thực tế của vật liệu trước khi cắt.</p>
+</details>
+</section>
+</main>
+<footer>Máy tính chạy trực tiếp trong trình duyệt, không gửi dữ liệu lên mạng.</footer>
+<script>
+const $ = id => document.getElementById(id);
+let lastReport = '';
+function num(id){ return Number($(id).value); }
+function fmt(v){ return Number(v).toLocaleString('vi-VN',{minimumFractionDigits:0,maximumFractionDigits:3}); }
+function getMode(){ return document.querySelector('input[name="mode"]:checked').value; }
+function updateMode(){
+ const alt=getMode()==='alt';
+ $('altFields').style.display=alt?'block':'none';
+ $('equalN').disabled=alt;
+}
+document.querySelectorAll('input[name="mode"]').forEach(x=>x.addEventListener('change',updateMode));
+function solve(){
+ const W=num('width'), B=num('bar');
+ if(!Number.isFinite(W)||!Number.isFinite(B)||W<=0||B<=0){showError('Nhập chiều lọt lòng và bề rộng thanh chia lớn hơn 0.');return;}
+ const mode=getMode();
+ let cells=[], bigCount=0, smallCount=0, bars=0, bigGap=null, smallGap=null, equalGap=null;
+ if(mode==='equal'){
+   const N=num('equalN');
+   if(!Number.isInteger(N)||N<1){showError('Số ô đều nhau phải là số nguyên từ 1 trở lên.');return;}
+   bars=N-1;
+   equalGap=(W-bars*B)/N;
+   if(equalGap<=0){showError('Số thanh chia chiếm hết hoặc vượt chiều lọt lòng. Giảm số ô hoặc bề rộng thanh.');return;}
+   for(let i=0;i<N;i++) cells.push({type:'equal',gap:equalGap});
+ } else {
+   const S=num('small'), lo=num('minBig'), hi=num('maxBig');
+   if(!Number.isFinite(S)||!Number.isFinite(lo)||!Number.isFinite(hi)||S<0||lo<=0||hi<lo){showError('Kiểm tra ô nhỏ và giới hạn ô to.');return;}
+   const largeEnds=$('largeEnds').checked, even=$('evenBig').checked, candidates=[];
+   for(let N=2;N<=300;N++){
+     if(even&&N%2!==0) continue;
+     const ns=largeEnds?N-1:N+1;
+     const nb=N+ns-1;
+     const gap=(W-ns*S-nb*B)/N;
+     if(gap>=lo-1e-8&&gap<=hi+1e-8) candidates.push({N,ns,nb,gap,score:Math.abs(gap-(lo+hi)/2)});
+   }
+   if(!candidates.length){
+     showError('Không tìm thấy phương án nằm trong khoảng ô to bạn đặt. Hãy nới khoảng ô to, bỏ chọn số ô to chẵn hoặc thay đổi thông số.');
+     return;
+   }
+   candidates.sort((a,b)=>a.score-b.score || a.N-b.N);
+   const c=candidates[0]; bigCount=c.N; smallCount=c.ns; bars=c.nb; bigGap=c.gap; smallGap=S;
+   let next='big';
+   if(largeEnds){
+     for(let i=0;i<bigCount;i++){cells.push({type:'big',gap:bigGap});if(i<smallCount)cells.push({type:'small',gap:smallGap});}
+   }else{
+     // Small–big–small alternating; counts equal in this pattern.
+     for(let i=0;i<bigCount;i++){cells.push({type:'small',gap:smallGap});cells.push({type:'big',gap:bigGap});}
+     cells.push({type:'small',gap:smallGap});
+   }
+ }
+ // Build divider positions from the inner left edge.
+ let x=0, dividerList=[];
+ for(let i=0;i<cells.length;i++){
+   x += cells[i].gap;
+   if(i<cells.length-1){dividerList.push({left:x,center:x+B/2});x+=B;}
+ }
+ const total=cells.reduce((s,c)=>s+c.gap,0)+bars*B;
+ const diff=W-total;
+ $('result').classList.add('show');
+ $('message').className='notice';
+ $('message').textContent= mode==='equal' ? 'Đã chia đều tất cả các ô.' : 'Đã chọn phương án có ô to gần giữa khoảng bạn yêu cầu nhất.';
+ const stats=[];
+ if(mode==='equal'){
+   stats.push(['Số ô',cells.length],['Thanh chia',bars],['Lọt lòng mỗi ô',fmt(equalGap)+' mm'],['Sai lệch tổng',fmt(diff)+' mm']);
+ } else {
+   stats.push(['Số ô to',bigCount],['Số ô nhỏ',smallCount],['Thanh chia',bars],['Lọt lòng ô to',fmt(bigGap)+' mm']);
+ }
+ $('stats').innerHTML=stats.map(s=>`<div class="stat"><small>${s[0]}</small><strong>${s[1]}</strong></div>`).join('');
+ $('checkTable').innerHTML=[
+  `<tr><th>Thành phần</th><th>Số lượng</th><th>Kích thước</th><th>Tổng (mm)</th></tr>`,
+  mode==='equal'?`<tr><td>Ô đều</td><td>${cells.length}</td><td>${fmt(equalGap)} mm</td><td>${fmt(cells.length*equalGap)}</td></tr>`:
+  `<tr><td>Ô to</td><td>${bigCount}</td><td>${fmt(bigGap)} mm</td><td>${fmt(bigCount*bigGap)}</td></tr><tr><td>Ô nhỏ</td><td>${smallCount}</td><td>${fmt(smallGap)} mm</td><td>${fmt(smallCount*smallGap)}</td></tr>`,
+  `<tr><td>Thanh chia</td><td>${bars}</td><td>${fmt(B)} mm</td><td>${fmt(bars*B)}</td></tr>`,
+  `<tr><th colspan="3">Tổng tính được</th><th>${fmt(total)} mm</th></tr>`,
+  `<tr><th colspan="3">Chiều lọt lòng yêu cầu</th><th>${fmt(W)} mm</th></tr>`,
+  `<tr><th colspan="3">Sai lệch do làm tròn hiển thị</th><th>${fmt(diff)} mm</th></tr>`
+ ].join('');
+ const svgW=760, svgH=100, pad=18, barY=28, barH=28, usable=svgW-2*pad;
+ let rects='', labels='';
+ let xx=pad, scale=usable/W;
+ cells.forEach((c,i)=>{
+   const cw=c.gap*scale;
+   const fill=c.type==='big'?'#d9eee3':c.type==='small'?'#fff0ce':'#dce8f8';
+   rects+=`<rect x="${xx.toFixed(2)}" y="${barY}" width="${Math.max(0,cw).toFixed(2)}" height="${barH}" fill="${fill}" stroke="#5d7166" stroke-width=".8"/>`;
+   if(cw>25) labels+=`<text x="${(xx+cw/2).toFixed(2)}" y="${barY+18}" text-anchor="middle" font-size="10" fill="#1b2a22">${c.type==='big'?'T':c.type==='small'?'N':'Ô'}</text>`;
+   xx+=cw;
+   if(i<cells.length-1){rects+=`<rect x="${xx.toFixed(2)}" y="${barY}" width="${(B*scale).toFixed(2)}" height="${barH}" fill="#53615b"/>`;xx+=B*scale;}
+ });
+ $('drawing').innerHTML=`<svg viewBox="0 0 ${svgW} ${svgH}" role="img" aria-label="Sơ đồ các ô trong khung"><text x="${pad}" y="17" font-size="11" fill="#62716a">TRÁI</text><text x="${svgW-pad}" y="17" text-anchor="end" font-size="11" fill="#62716a">PHẢI</text>${rects}${labels}<text x="${svgW/2}" y="78" text-anchor="middle" font-size="12" fill="#62716a">Chiều lọt lòng: ${fmt(W)} mm · thanh chia: ${fmt(B)} mm</text><text x="${svgW/2}" y="94" text-anchor="middle" font-size="10" fill="#62716a">T = ô to · N = ô nhỏ · ô đều = Ô</text></svg>`;
+ $('marks').innerHTML=dividerList.map((m,i)=>`<tr><td>${i+1}</td><td>${fmt(m.left)}</td><td>${fmt(m.center)}</td></tr>`).join('')||'<tr><td colspan="3">Không có thanh chia bên trong.</td></tr>';
+ lastReport = `MÁY TÍNH CHIA Ô KHUNG SẮT\nChiều lọt lòng khung: ${fmt(W)} mm\nBề rộng thanh chia: ${fmt(B)} mm\n`+
+ (mode==='equal'?`Chế độ: chia đều\nSố ô: ${cells.length}\nLọt lòng mỗi ô: ${fmt(equalGap)} mm\nSố thanh chia: ${bars}\n`:
+ `Chế độ: ô to - ô nhỏ xen kẽ\nÔ to: ${bigCount} ô × ${fmt(bigGap)} mm lọt lòng\nÔ nhỏ: ${smallCount} ô × ${fmt(smallGap)} mm lọt lòng\nThanh chia: ${bars} thanh × ${fmt(B)} mm\n`)+
+ `Tổng tính được: ${fmt(total)} mm\nSai lệch: ${fmt(diff)} mm\n\nVỊ TRÍ LẤY DẤU (từ mép trong bên trái)\n`+dividerList.map((m,i)=>`Thanh ${i+1}: mép trái ${fmt(m.left)} mm; tâm ${fmt(m.center)} mm`).join('\n')+
+ `\n\nLưu ý: kiểm tra lại cấu tạo khung và kích thước vật liệu thực tế trước khi cắt.`;
+}
+function showError(msg){
+ $('result').classList.add('show');
+ $('message').className='notice bad';
+ $('message').textContent=msg;
+ $('stats').innerHTML='';$('drawing').innerHTML='';$('checkTable').innerHTML='';$('marks').innerHTML='';
+ lastReport='';
+}
+$('calcBtn').addEventListener('click',solve);
+$('copyBtn').addEventListener('click',async()=>{
+ if(!lastReport)return;
+ try{await navigator.clipboard.writeText(lastReport);$('copyBtn').textContent='Đã sao chép';}
+ catch(e){fallbackCopy(lastReport);$('copyBtn').textContent='Đã mở nội dung sao chép';}
+ setTimeout(()=>$('copyBtn').textContent='Sao chép kết quả',1800);
+});
+function fallbackCopy(text){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+$('txtBtn').addEventListener('click',()=>{
+ if(!lastReport)return;
+ const blob=new Blob([lastReport],{type:'text/plain;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ket-qua-chia-o-khung-sat.txt';a.click();URL.revokeObjectURL(a.href);
+});
+updateMode();solve();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('Không đăng ký được chế độ offline:', err)); });
+}
+</script>
+</body>
+</html>
